@@ -1,5 +1,5 @@
 // Mystic Tarot service worker
-const CACHE = "mystic-tarot-v3";
+const CACHE = "mystic-tarot-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS = [
   "./manifest.json",
   "./js/cards-major.js",
   "./js/cards-minor.js",
+  "./js/readings.js",
   "./js/spreads.js",
   "./js/cardart.js",
   "./js/app.js",

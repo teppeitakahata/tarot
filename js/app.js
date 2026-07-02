@@ -208,6 +208,7 @@ function openCardModal(d, pos, index) {
         <div class="m-kw">${kws.map(k => `<span>${k}</span>`).join("")}</div>
       </div>
     </div>
+    ${(rev ? c.readR : c.read) ? `<div class="m-reading">🔎 <b>このカードからの読み取り:</b><br>${rev ? c.readR : c.read}</div>` : ""}
     ${storyHtml}
     <div class="m-section">
       <h4>${rev ? "逆位置の意味" : "正位置の意味"}</h4>
@@ -240,44 +241,64 @@ function closeModal() {
 $(".modal-close").addEventListener("click", closeModal);
 $(".modal-backdrop").addEventListener("click", closeModal);
 
-// ---- 全体の流れ(物語として繋げた解説) ----
+// ---- 全体の流れ(位置ごとに区切ったやさしい解説) ----
 function buildNarrative() {
-  const nm = d => `「${d.card.name}${d.reversed ? "・逆位置" : ""}」`;
-  const kw1 = d => (d.reversed ? d.card.kwR : d.card.kw)[0];
+  // カード名(向き付き)
+  const nm = d => `${d.card.name}${d.reversed ? "(逆位置)" : ""}`;
+  // キーワード2つ
   const kws = d => (d.reversed ? d.card.kwR : d.card.kw).slice(0, 2).join("・");
-  const sent1 = d => {
-    const t = d.reversed ? d.card.rev : d.card.up;
-    return t.split("。")[0] + "。";
+  const kw1 = d => (d.reversed ? d.card.kwR : d.card.kw)[0];
+  // 読み取り文(あなたの状況として訳した平易な文)。なければ意味の冒頭で代用
+  const mean = d => {
+    const read = d.reversed ? d.card.readR : d.card.read;
+    if (read) return read;
+    const t = (d.reversed ? d.card.rev : d.card.up).split("。").filter(s => s.trim());
+    let out = t[0] + "。";
+    if (out.length < 55 && t[1]) out += t[1] + "。";
+    return out;
   };
+  // 見出し付きブロック:【位置】カード名(キーワード) + 意味 + ひとこと
+  const block = (label, d, note) =>
+    `<b>【${label}】</b>「${nm(d)}」<small>(${kws(d)})</small><br>` +
+    mean(d) + (note ? `<br><small>→ ${note}</small>` : "");
+  // 意味は省いて一行で示す軽いブロック
+  const line = (label, d, text) =>
+    `<b>【${label}】</b>「${nm(d)}」<small>(${kws(d)})</small><br>${text}`;
+
   const p = [];
 
   if (currentSpread.id === "one") {
     const d = drawn[0];
-    p.push(`あなたに届いたメッセージは${nm(d)}。テーマは<b>${kws(d)}</b>です。`);
-    p.push(`${sent1(d)}${d.card.advice}`);
+    p.push(block("今日のメッセージ", d));
+    p.push(`<b>今日のポイント:</b>${d.card.advice}`);
 
   } else if (currentSpread.id === "three") {
     const [pa, pr, fu] = drawn;
-    p.push(`今の状況の根っこには、過去の${nm(pa)}——<b>${kw1(pa)}</b>の経験があります。${sent1(pa)}`);
-    p.push(`それを受けて、現在のあなたは${nm(pr)}の中にいます。<b>${kw1(pr)}</b>が今のあなたの中心テーマ。${sent1(pr)}`);
-    p.push(`このままの流れで進むと、未来には${nm(fu)}(<b>${kws(fu)}</b>)が待っています。${sent1(fu)}`);
-    p.push(`未来のカードは「決定した運命」ではなく、今の流れの延長線です。現在の${nm(pr)}が示す姿勢をどう扱うかで、未来の形は変えていけます。`);
+    p.push(`3枚を時間の流れに沿って読みます。`);
+    p.push(block("過去", pa, "この経験が、今の状況の土台になっています。"));
+    p.push(block("現在", pr, "3枚の中でいちばん大切なカードです。今のあなたの姿がここに出ています。"));
+    p.push(block("未来", fu, "「このまま進んだ場合」の行き先です。"));
+    p.push(`<b>まとめ:</b>過去の「${nm(pa)}」から始まった流れが、今「${nm(pr)}」として表れていて、このままなら「${nm(fu)}」へ向かいます。未来は確定ではありません。現在のカードが教えてくれている姿勢を意識すれば、行き先は変えられます。`);
 
   } else if (currentSpread.id === "choice") {
     const [now, aS, bS, aR, bR] = drawn;
-    p.push(`選択を前にした今のあなたは${nm(now)}——<b>${kw1(now)}</b>の状態です。${sent1(now)}`);
-    p.push(`<b>Aの道</b>を選ぶと、道のりは${nm(aS)}(${kw1(aS)})、行き着く先は${nm(aR)}(<b>${kws(aR)}</b>)。`);
-    p.push(`<b>Bの道</b>を選ぶと、道のりは${nm(bS)}(${kw1(bS)})、行き着く先は${nm(bR)}(<b>${kws(bR)}</b>)。`);
-    p.push(`2つの「結果」のカードを見比べて、心が動いたほう・受け入れられると感じたほうが、あなたの本音に近い答えです。迷ったら、それぞれのカードをもう一度タップして読み比べてみてください。`);
+    p.push(block("今のあなた", now, "まず、この迷っている状態そのものを表しています。"));
+    p.push(line("Aを選んだ場合", aR, `道の途中は「${nm(aS)}」(${kw1(aS)})。そして最終的にたどり着くのは——${mean(aR)}`));
+    p.push(line("Bを選んだ場合", bR, `道の途中は「${nm(bS)}」(${kw1(bS)})。そして最終的にたどり着くのは——${mean(bR)}`));
+    p.push(`<b>まとめ:</b>2つの「結果」を読んで、しっくりくるほう・受け入れられると感じたほうが、あなたの本音に近い答えです。決めきれないときは、AとBのカードをもう一度タップして読み比べてみてください。`);
 
   } else if (currentSpread.id === "celtic") {
     const [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10] = drawn;
-    p.push(`問題の中心にあるのは${nm(c1)}——<b>${kw1(c1)}</b>という状況です。そこに${nm(c2)}が交差し、<b>${kw1(c2)}</b>が乗り越えるべき課題(または状況を左右する鍵)として横たわっています。`);
-    p.push(`あなたは頭では<b>${kw1(c3)}</b>(${nm(c3)})を考えていますが、心の奥では<b>${kw1(c4)}</b>(${nm(c4)})を感じています。この「意識」と「本音」の距離が、状況を読み解く重要なヒントです。`);
-    p.push(`時間の流れで見ると、過去の${nm(c5)}(${kw1(c5)})から、近い未来の${nm(c6)}(<b>${kw1(c6)}</b>)へと動きつつあります。`);
-    p.push(`あなた自身は${nm(c7)}(${kw1(c7)})という姿勢で立ち、周囲の環境は${nm(c8)}(${kw1(c8)})。そして心の中では${nm(c9)}——<b>${kw1(c9)}</b>への願いと恐れが同居しています。`);
-    p.push(`これらすべての流れが行き着く最終結果は${nm(c10)}。${sent1(c10)}<b>${kws(c10)}</b>がこのリーディングの結論です。`);
-    p.push(`10枚が描いているのは「確定した未来」ではなく、今の力関係の見取り図です。特に障害(2)・潜在意識(4)・願望と恐れ(9)のカードに心当たりがあれば、そこがあなたが動かせる場所。気になる位置のカードを再タップして深く読んでみてください。`);
+    p.push(`10枚を順番に、やさしく読み解いていきます。`);
+    p.push(block("① 今の状況", c1));
+    p.push(line("② 課題", c2, `このカードが、今あなたの前に横たわっているテーマです。「${kw1(c2)}」にどう向き合うかが鍵になります。`));
+    p.push(line("③ 頭で考えていること", c3, `あなたの意識は「${kw1(c3)}」に向いています。`));
+    p.push(line("④ 心の奥の本音", c4, `でも心の奥では「${kw1(c4)}」を感じています。③と④が違うほど、モヤモヤの原因はこのギャップにあります。`));
+    p.push(line("⑤ 過去 → ⑥ 近い未来", c6, `「${nm(c5)}」(${kw1(c5)})の影響は薄れつつあり、これから「${kw1(c6)}」の流れがやってきます。`));
+    p.push(line("⑦ あなたの姿勢と ⑧ 周囲", c7, `あなたは「${kw1(c7)}」という姿勢でこの問題に向き合っていて、周囲の状況は「${nm(c8)}」(${kw1(c8)})です。`));
+    p.push(line("⑨ 願いと恐れ", c9, `「${kw1(c9)}」——それを望みながら、同時に恐れてもいます。願いと恐れは裏表です。`));
+    p.push(block("⑩ 最終的な行き先", c10, "ここまでの流れが、このまま進んだ場合の結論です。"));
+    p.push(`<b>まとめ:</b>これは「決まった未来」ではなく、今の状況の見取り図です。とくに②課題・④本音・⑨願いと恐れの3枚に心当たりがあれば、そこがあなたの動かせる場所です。気になるカードはもう一度タップすると、詳しい解説が読めます。`);
   }
   return p;
 }
