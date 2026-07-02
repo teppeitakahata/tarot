@@ -120,6 +120,9 @@ function renderBoard() {
       if (c.cross) slot.style.zIndex = 2;
       board.appendChild(slot);
     });
+    // 1枚目をめくるまでは、上に重なる2枚目へのタップを下の1枚目に通す
+    const crossSlot = board.querySelector(".cross-slot");
+    if (crossSlot) crossSlot.style.pointerEvents = "none";
   } else if (currentSpread.layout === "choice") {
     board.classList.add("flex-board");
     // 上段: Aの結果・Bの結果 / 下段: Aの状況・現在・Bの状況
@@ -147,6 +150,10 @@ function onCardTap(i, slot) {
   if (!d.flipped) {
     d.flipped = true;
     slot.querySelector(".card-flip").classList.add("flipped");
+    if (currentSpread.layout === "celtic" && i === 0) {
+      const crossSlot = $("#board .cross-slot");
+      if (crossSlot) crossSlot.style.pointerEvents = "";
+    }
     const label = slot.querySelector(".slot-name");
     label.textContent = d.card.name;
     if (d.reversed) {
@@ -233,6 +240,48 @@ function closeModal() {
 $(".modal-close").addEventListener("click", closeModal);
 $(".modal-backdrop").addEventListener("click", closeModal);
 
+// ---- 全体の流れ(物語として繋げた解説) ----
+function buildNarrative() {
+  const nm = d => `「${d.card.name}${d.reversed ? "・逆位置" : ""}」`;
+  const kw1 = d => (d.reversed ? d.card.kwR : d.card.kw)[0];
+  const kws = d => (d.reversed ? d.card.kwR : d.card.kw).slice(0, 2).join("・");
+  const sent1 = d => {
+    const t = d.reversed ? d.card.rev : d.card.up;
+    return t.split("。")[0] + "。";
+  };
+  const p = [];
+
+  if (currentSpread.id === "one") {
+    const d = drawn[0];
+    p.push(`あなたに届いたメッセージは${nm(d)}。テーマは<b>${kws(d)}</b>です。`);
+    p.push(`${sent1(d)}${d.card.advice}`);
+
+  } else if (currentSpread.id === "three") {
+    const [pa, pr, fu] = drawn;
+    p.push(`今の状況の根っこには、過去の${nm(pa)}——<b>${kw1(pa)}</b>の経験があります。${sent1(pa)}`);
+    p.push(`それを受けて、現在のあなたは${nm(pr)}の中にいます。<b>${kw1(pr)}</b>が今のあなたの中心テーマ。${sent1(pr)}`);
+    p.push(`このままの流れで進むと、未来には${nm(fu)}(<b>${kws(fu)}</b>)が待っています。${sent1(fu)}`);
+    p.push(`未来のカードは「決定した運命」ではなく、今の流れの延長線です。現在の${nm(pr)}が示す姿勢をどう扱うかで、未来の形は変えていけます。`);
+
+  } else if (currentSpread.id === "choice") {
+    const [now, aS, bS, aR, bR] = drawn;
+    p.push(`選択を前にした今のあなたは${nm(now)}——<b>${kw1(now)}</b>の状態です。${sent1(now)}`);
+    p.push(`<b>Aの道</b>を選ぶと、道のりは${nm(aS)}(${kw1(aS)})、行き着く先は${nm(aR)}(<b>${kws(aR)}</b>)。`);
+    p.push(`<b>Bの道</b>を選ぶと、道のりは${nm(bS)}(${kw1(bS)})、行き着く先は${nm(bR)}(<b>${kws(bR)}</b>)。`);
+    p.push(`2つの「結果」のカードを見比べて、心が動いたほう・受け入れられると感じたほうが、あなたの本音に近い答えです。迷ったら、それぞれのカードをもう一度タップして読み比べてみてください。`);
+
+  } else if (currentSpread.id === "celtic") {
+    const [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10] = drawn;
+    p.push(`問題の中心にあるのは${nm(c1)}——<b>${kw1(c1)}</b>という状況です。そこに${nm(c2)}が交差し、<b>${kw1(c2)}</b>が乗り越えるべき課題(または状況を左右する鍵)として横たわっています。`);
+    p.push(`あなたは頭では<b>${kw1(c3)}</b>(${nm(c3)})を考えていますが、心の奥では<b>${kw1(c4)}</b>(${nm(c4)})を感じています。この「意識」と「本音」の距離が、状況を読み解く重要なヒントです。`);
+    p.push(`時間の流れで見ると、過去の${nm(c5)}(${kw1(c5)})から、近い未来の${nm(c6)}(<b>${kw1(c6)}</b>)へと動きつつあります。`);
+    p.push(`あなた自身は${nm(c7)}(${kw1(c7)})という姿勢で立ち、周囲の環境は${nm(c8)}(${kw1(c8)})。そして心の中では${nm(c9)}——<b>${kw1(c9)}</b>への願いと恐れが同居しています。`);
+    p.push(`これらすべての流れが行き着く最終結果は${nm(c10)}。${sent1(c10)}<b>${kws(c10)}</b>がこのリーディングの結論です。`);
+    p.push(`10枚が描いているのは「確定した未来」ではなく、今の力関係の見取り図です。特に障害(2)・潜在意識(4)・願望と恐れ(9)のカードに心当たりがあれば、そこがあなたが動かせる場所。気になる位置のカードを再タップして深く読んでみてください。`);
+  }
+  return p;
+}
+
 // ---- 総合リーディング ----
 function renderSummary() {
   const sum = $("#summary");
@@ -270,9 +319,14 @@ function renderSummary() {
     ? "1枚引きは「今のあなたに一番必要なメッセージ」。キーワードを今日一日、心のどこかに置いてみてください。"
     : "複数のカードは1枚ずつ読んだあと、物語として繋げるのがコツです。位置の意味(下の一覧)に沿って、「過去がこうだから、今こうなっていて…」と声に出してみましょう。";
 
+  const narrative = buildNarrative();
+
   sum.innerHTML = `
     <h3>✦ 総合リーディング ✦</h3>
-    ${lines.map(l => `<p>${l}</p>`).join("")}
+    <h4>🔮 全体の流れ</h4>
+    ${narrative.map(l => `<p>${l}</p>`).join("")}
+    ${lines.length ? `<h4>📊 カードの傾向</h4>${lines.map(l => `<p>${l}</p>`).join("")}` : ""}
+    <h4>🗂 引いたカード一覧</h4>
     <ul class="sum-list">${listItems}</ul>
     <p style="font-size:12.5px;color:var(--text-dim)">${readingTip}</p>
     <button class="primary-btn" id="again-btn">もう一度占う</button>
