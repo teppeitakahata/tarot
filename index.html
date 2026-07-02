@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Mystic Tarot - 本格タロット占い</title>
+<meta name="description" content="78枚フルデッキの本格タロット占い。丁寧な解説付きで初心者でも安心。">
+<meta name="theme-color" content="#faf8f4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="タロット占い">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header class="app-header">
+  <div class="app-title">✦ Mystic Tarot ✦</div>
+  <div class="app-subtitle">本格タロット占い</div>
+</header>
+
+<main id="main">
+
+  <!-- ===== 占う:スプレッド選択 ===== -->
+  <section id="screen-home" class="screen active">
+    <p class="lead">占いたい内容に合わせてスプレッド(カードの並べ方)を選んでください。</p>
+    <div id="spread-list" class="spread-list"></div>
+    <div class="home-note">
+      <h3>はじめての方へ</h3>
+      <p>タロットが読めなくても大丈夫。カードをめくると、その位置での意味を一枚ずつ丁寧に解説します。まずは「今日の一枚」から気軽にどうぞ。下の「学ぶ」タブには基礎知識もまとめてあります。</p>
+    </div>
+  </section>
+
+  <!-- ===== 占う:質問入力 ===== -->
+  <section id="screen-question" class="screen">
+    <button class="back-btn" data-back="home">‹ 戻る</button>
+    <h2 id="q-spread-name" class="screen-title"></h2>
+    <p id="q-spread-desc" class="screen-desc"></p>
+    <label class="q-label" for="question-input">占いたいこと(任意)</label>
+    <textarea id="question-input" placeholder="例:今の仕事を続けるべきか迷っています…&#10;&#10;具体的に思い浮かべるほど、カードの意味が受け取りやすくなります。"></textarea>
+    <label class="toggle-row">
+      <span>逆位置を採用する<small>逆さまに出たカードを別の意味で読みます(本格派)</small></span>
+      <input type="checkbox" id="reversed-toggle" checked>
+      <span class="toggle-ui"></span>
+    </label>
+    <button id="start-shuffle" class="primary-btn">カードをシャッフルする</button>
+  </section>
+
+  <!-- ===== 占う:シャッフル ===== -->
+  <section id="screen-shuffle" class="screen">
+    <div class="shuffle-stage">
+      <div class="shuffle-deck" id="shuffle-deck"></div>
+      <p id="shuffle-msg" class="shuffle-msg">心の中で質問を思い浮かべてください…</p>
+    </div>
+  </section>
+
+  <!-- ===== 占う:リーディング ===== -->
+  <section id="screen-reading" class="screen">
+    <button class="back-btn" data-back="home">‹ 最初から</button>
+    <h2 id="r-spread-name" class="screen-title"></h2>
+    <p id="r-question" class="r-question"></p>
+    <p id="r-hint" class="r-hint">カードをタップしてめくってください</p>
+    <div id="board" class="board"></div>
+    <div id="summary" class="summary hidden"></div>
+  </section>
+
+  <!-- ===== 図鑑 ===== -->
+  <section id="screen-dict" class="screen">
+    <h2 class="screen-title">カード図鑑<span class="count">全78枚</span></h2>
+    <div class="dict-filters" id="dict-filters">
+      <button class="chip active" data-filter="all">すべて</button>
+      <button class="chip" data-filter="major">大アルカナ</button>
+      <button class="chip" data-filter="wands">ワンド</button>
+      <button class="chip" data-filter="cups">カップ</button>
+      <button class="chip" data-filter="swords">ソード</button>
+      <button class="chip" data-filter="pentacles">ペンタクル</button>
+    </div>
+    <div id="dict-grid" class="dict-grid"></div>
+  </section>
+
+  <!-- ===== 学ぶ ===== -->
+  <section id="screen-learn" class="screen">
+    <h2 class="screen-title">タロットの基礎知識</h2>
+    <div id="learn-content"></div>
+  </section>
+
+</main>
+
+<!-- ===== カード詳細モーダル ===== -->
+<div id="modal" class="modal hidden">
+  <div class="modal-backdrop"></div>
+  <div class="modal-sheet">
+    <button class="modal-close" aria-label="閉じる">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ===== タブバー ===== -->
+<nav class="tabbar">
+  <button class="tab active" data-screen="home"><span class="tab-icon">🔮</span>占う</button>
+  <button class="tab" data-screen="dict"><span class="tab-icon">🗂</span>図鑑</button>
+  <button class="tab" data-screen="learn"><span class="tab-icon">📖</span>学ぶ</button>
+</nav>
+
+<script src="./js/cards-major.js"></script>
+<script src="./js/cards-minor.js"></script>
+<script src="./js/spreads.js"></script>
+<script src="./js/cardart.js"></script>
+<script src="./js/app.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+</script>
+</body>
+</html>

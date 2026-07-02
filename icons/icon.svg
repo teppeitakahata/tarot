@@ -1,0 +1,17 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="85%">
+      <stop offset="0%" stop-color="#fffdf8"/>
+      <stop offset="100%" stop-color="#f3ecdc"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#bg)"/>
+  <rect x="36" y="36" width="440" height="440" rx="84" fill="none" stroke="#b8923f" stroke-width="8"/>
+  <circle cx="256" cy="256" r="130" fill="none" stroke="#b8923f" stroke-width="6"/>
+  <circle cx="256" cy="256" r="104" fill="none" stroke="#b8923f88" stroke-width="3"/>
+  <text x="256" y="308" font-size="150" text-anchor="middle">🌙</text>
+  <text x="256" y="120" font-size="52" text-anchor="middle" fill="#b8923f">✦</text>
+  <text x="256" y="448" font-size="52" text-anchor="middle" fill="#b8923f">✦</text>
+  <text x="96" y="284" font-size="40" text-anchor="middle" fill="#b8923f">✧</text>
+  <text x="416" y="284" font-size="40" text-anchor="middle" fill="#b8923f">✧</text>
+</svg>
