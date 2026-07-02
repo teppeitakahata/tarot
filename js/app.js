@@ -241,115 +241,107 @@ function closeModal() {
 $(".modal-close").addEventListener("click", closeModal);
 $(".modal-backdrop").addEventListener("click", closeModal);
 
-// ---- 全体の流れ(位置ごとに区切ったやさしい解説) ----
+// ---- 占い結果(占い師が語りかける、やさしい文章) ----
+// 返り値: { lead:導入文, body:[{label, card, text}], advice:締めの助言 }
 function buildNarrative() {
-  // カード名(向き付き)
-  const nm = d => `${d.card.name}${d.reversed ? "(逆位置)" : ""}`;
-  // キーワード2つ
-  const kws = d => (d.reversed ? d.card.kwR : d.card.kw).slice(0, 2).join("・");
-  const kw1 = d => (d.reversed ? d.card.kwR : d.card.kw)[0];
-  // 読み取り文(あなたの状況として訳した平易な文)。なければ意味の冒頭で代用
-  const mean = d => {
-    const read = d.reversed ? d.card.readR : d.card.read;
-    if (read) return read;
-    const t = (d.reversed ? d.card.rev : d.card.up).split("。").filter(s => s.trim());
-    let out = t[0] + "。";
-    if (out.length < 55 && t[1]) out += t[1] + "。";
-    return out;
+  // その向きの読み取り文(なければカードの意味の冒頭で代用)
+  const read = d => {
+    const r = d.reversed ? d.card.readR : d.card.read;
+    if (r) return r;
+    return (d.reversed ? d.card.rev : d.card.up).split("。")[0] + "。";
   };
-  // 見出し付きブロック:【位置】カード名(キーワード) + 意味 + ひとこと
-  const block = (label, d, note) =>
-    `<b>【${label}】</b>「${nm(d)}」<small>(${kws(d)})</small><br>` +
-    mean(d) + (note ? `<br><small>→ ${note}</small>` : "");
-  // 意味は省いて一行で示す軽いブロック
-  const line = (label, d, text) =>
-    `<b>【${label}】</b>「${nm(d)}」<small>(${kws(d)})</small><br>${text}`;
-
-  const p = [];
+  const advice = d => d.card.advice;
 
   if (currentSpread.id === "one") {
     const d = drawn[0];
-    p.push(block("今日のメッセージ", d));
-    p.push(`<b>今日のポイント:</b>${d.card.advice}`);
-
-  } else if (currentSpread.id === "three") {
-    const [pa, pr, fu] = drawn;
-    p.push(`3枚を時間の流れに沿って読みます。`);
-    p.push(block("過去", pa, "この経験が、今の状況の土台になっています。"));
-    p.push(block("現在", pr, "3枚の中でいちばん大切なカードです。今のあなたの姿がここに出ています。"));
-    p.push(block("未来", fu, "「このまま進んだ場合」の行き先です。"));
-    p.push(`<b>まとめ:</b>過去の「${nm(pa)}」から始まった流れが、今「${nm(pr)}」として表れていて、このままなら「${nm(fu)}」へ向かいます。未来は確定ではありません。現在のカードが教えてくれている姿勢を意識すれば、行き先は変えられます。`);
-
-  } else if (currentSpread.id === "choice") {
-    const [now, aS, bS, aR, bR] = drawn;
-    p.push(block("今のあなた", now, "まず、この迷っている状態そのものを表しています。"));
-    p.push(line("Aを選んだ場合", aR, `道の途中は「${nm(aS)}」(${kw1(aS)})。そして最終的にたどり着くのは——${mean(aR)}`));
-    p.push(line("Bを選んだ場合", bR, `道の途中は「${nm(bS)}」(${kw1(bS)})。そして最終的にたどり着くのは——${mean(bR)}`));
-    p.push(`<b>まとめ:</b>2つの「結果」を読んで、しっくりくるほう・受け入れられると感じたほうが、あなたの本音に近い答えです。決めきれないときは、AとBのカードをもう一度タップして読み比べてみてください。`);
-
-  } else if (currentSpread.id === "celtic") {
-    const [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10] = drawn;
-    p.push(`10枚を順番に、やさしく読み解いていきます。`);
-    p.push(block("① 今の状況", c1));
-    p.push(line("② 課題", c2, `このカードが、今あなたの前に横たわっているテーマです。「${kw1(c2)}」にどう向き合うかが鍵になります。`));
-    p.push(line("③ 頭で考えていること", c3, `あなたの意識は「${kw1(c3)}」に向いています。`));
-    p.push(line("④ 心の奥の本音", c4, `でも心の奥では「${kw1(c4)}」を感じています。③と④が違うほど、モヤモヤの原因はこのギャップにあります。`));
-    p.push(line("⑤ 過去 → ⑥ 近い未来", c6, `「${nm(c5)}」(${kw1(c5)})の影響は薄れつつあり、これから「${kw1(c6)}」の流れがやってきます。`));
-    p.push(line("⑦ あなたの姿勢と ⑧ 周囲", c7, `あなたは「${kw1(c7)}」という姿勢でこの問題に向き合っていて、周囲の状況は「${nm(c8)}」(${kw1(c8)})です。`));
-    p.push(line("⑨ 願いと恐れ", c9, `「${kw1(c9)}」——それを望みながら、同時に恐れてもいます。願いと恐れは裏表です。`));
-    p.push(block("⑩ 最終的な行き先", c10, "ここまでの流れが、このまま進んだ場合の結論です。"));
-    p.push(`<b>まとめ:</b>これは「決まった未来」ではなく、今の状況の見取り図です。とくに②課題・④本音・⑨願いと恐れの3枚に心当たりがあれば、そこがあなたの動かせる場所です。気になるカードはもう一度タップすると、詳しい解説が読めます。`);
+    return {
+      lead: "カードがあなたに、こんなメッセージを届けています。",
+      body: [{ label: "今日のあなたへ", card: d, text: read(d) }],
+      advice: advice(d)
+    };
   }
-  return p;
+
+  if (currentSpread.id === "three") {
+    const [pa, pr, fu] = drawn;
+    return {
+      lead: "カードが、あなたの「これまで・今・これから」を映し出しました。",
+      body: [
+        { label: "これまで", card: pa, text: read(pa) },
+        { label: "今のあなた", card: pr, text: read(pr) },
+        { label: "これから", card: fu, text: "このまま進むと、こんな未来が近づいています。" + read(fu) }
+      ],
+      advice: "この先をより良くするために——" + advice(pr)
+    };
+  }
+
+  if (currentSpread.id === "choice") {
+    const [now, aS, bS, aR, bR] = drawn;
+    return {
+      lead: "AとB、それぞれを選んだ先をカードが見せてくれました。",
+      body: [
+        { label: "今のあなた", card: now, text: read(now) },
+        { label: "Aを選ぶ道", card: aR, text: "この先に待っているのは——" + read(aR) },
+        { label: "Bを選ぶ道", card: bR, text: "この先に待っているのは——" + read(bR) }
+      ],
+      advice: "AとBの結果を読んで、心が「こっちがいい」と感じたほうが、あなたの本当の答えです。" + advice(now)
+    };
+  }
+
+  // ケルト十字 — 10枚を6つの読みやすいまとまりに
+  const [c1, c2, c3, c4, c5, c6, c7, c8, c9, c10] = drawn;
+  return {
+    lead: "10枚のカードが、あなたの状況をいろんな角度から映し出しました。要点を順にお伝えします。",
+    body: [
+      { label: "今の状況", card: c1, text: read(c1) },
+      { label: "向き合うテーマ", card: c2, text: "今のあなたが向き合っているのは、こんなことです。" + read(c2) },
+      { label: "あなたの心の中", card: c4, text: "頭では考えつつも、心の奥ではこう感じています。" + read(c4) },
+      { label: "これからの流れ", card: c6, text: "これから、こんな空気がやってきます。" + read(c6) },
+      { label: "まわりの様子", card: c8, text: "あなたを取り巻く状況は、こんな感じです。" + read(c8) },
+      { label: "行き着く先", card: c10, text: "このまま進んだ場合、たどり着くのは——" + read(c10) }
+    ],
+    advice: advice(c10)
+  };
 }
 
-// ---- 総合リーディング ----
+// ---- 占い結果 ----
 function renderSummary() {
   const sum = $("#summary");
-  const majors = drawn.filter(d => d.card.arcana === "major").length;
-  const revs = drawn.filter(d => d.reversed).length;
   const n = drawn.length;
-  const suitCount = {};
-  drawn.forEach(d => { if (d.card.suit) suitCount[d.card.suit] = (suitCount[d.card.suit] || 0) + 1; });
+  const revs = drawn.filter(d => d.reversed).length;
+  const story = buildNarrative();
 
-  const lines = [];
-
+  // 全体の運の流れ(専門用語を使わないやさしい一言)
+  let mood = "";
   if (n >= 3) {
-    if (majors / n >= 0.5) {
-      lines.push(`大アルカナが${majors}枚と多く出ています。これは、あなたの意志を超えた<b>大きな運命の流れ</b>が動いているサイン。出来事の一つひとつに重要な意味があります。`);
-    } else if (majors === 0) {
-      lines.push(`今回は小アルカナのみの展開です。運命的な大事件というより、<b>日常の中の選択や行動</b>で流れを変えられる状況を示しています。`);
-    }
-    const domSuit = Object.entries(suitCount).sort((a, b) => b[1] - a[1])[0];
-    if (domSuit && domSuit[1] >= Math.max(2, Math.ceil(n * 0.4))) {
-      const s = SUITS[domSuit[0]];
-      lines.push(`${s.name}(${s.element}のスート)が${domSuit[1]}枚。この問題の中心テーマは<b>「${s.theme}」</b>にありそうです。`);
-    }
-    if (revs / n >= 0.6) {
-      lines.push(`逆位置が${revs}枚と多めです。エネルギーが内側にこもり、<b>見直し・調整の時期</b>であることを示しています。焦って動くより、態勢を整えることが吉。`);
-    } else if (revs === 0 && useReversed) {
-      lines.push(`全て正位置で出ました。カードのエネルギーが素直に流れており、<b>物事がスムーズに動きやすい</b>状態です。`);
+    if (revs === 0 && useReversed) {
+      mood = "今回はすべて「正位置」で出ました。運の流れは素直で、物事が前向きに動きやすいときです。";
+    } else if (revs / n >= 0.6) {
+      mood = "「逆位置」が多めに出ています。今は勢いで進むより、少し立ち止まって整えるほうがうまくいくときです。";
     }
   }
 
+  // 本文ブロック(占い師の語りかけ)
+  const bodyHtml = story.body.map(b => `
+    <div class="fortune-block">
+      <div class="fb-label">${b.label}<span class="fb-card">${b.card.card.name}${b.card.reversed ? "・逆" : ""}</span></div>
+      <p>${b.text}</p>
+    </div>`).join("");
+
   const listItems = drawn.map((d, i) =>
-    `<li><b>${i + 1}. ${currentSpread.positions[i].key}</b> — ${d.card.name}${d.reversed ? "(逆)" : ""}:${(d.reversed ? d.card.kwR : d.card.kw).slice(0, 2).join("・")}</li>`
+    `<li><b>${i + 1}. ${currentSpread.positions[i].key}</b> — ${d.card.name}${d.reversed ? "(逆)" : ""}</li>`
   ).join("");
 
-  const readingTip = n === 1
-    ? "1枚引きは「今のあなたに一番必要なメッセージ」。キーワードを今日一日、心のどこかに置いてみてください。"
-    : "複数のカードは1枚ずつ読んだあと、物語として繋げるのがコツです。位置の意味(下の一覧)に沿って、「過去がこうだから、今こうなっていて…」と声に出してみましょう。";
-
-  const narrative = buildNarrative();
-
   sum.innerHTML = `
-    <h3>✦ 総合リーディング ✦</h3>
-    <h4>🔮 全体の流れ</h4>
-    ${narrative.map(l => `<p>${l}</p>`).join("")}
-    ${lines.length ? `<h4>📊 カードの傾向</h4>${lines.map(l => `<p>${l}</p>`).join("")}` : ""}
-    <h4>🗂 引いたカード一覧</h4>
-    <ul class="sum-list">${listItems}</ul>
-    <p style="font-size:12.5px;color:var(--text-dim)">${readingTip}</p>
+    <h3>✦ 占い結果 ✦</h3>
+    <p class="fortune-lead">${story.lead}</p>
+    ${bodyHtml}
+    ${mood ? `<p class="fortune-mood">${mood}</p>` : ""}
+    <div class="fortune-advice">🌙 <b>占いからのアドバイス</b><br>${story.advice}</div>
+    <details class="fortune-cards">
+      <summary>引いたカードの一覧を見る</summary>
+      <ul class="sum-list">${listItems}</ul>
+      <p class="dim-note">気になるカードは、盤面でもう一度タップすると詳しい解説が読めます。</p>
+    </details>
     <button class="primary-btn" id="again-btn">もう一度占う</button>
     <button class="ghost-btn" id="home-btn">スプレッド選択に戻る</button>`;
   sum.classList.remove("hidden");

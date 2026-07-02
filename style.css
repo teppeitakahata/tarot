@@ -236,6 +236,34 @@ main { padding: 8px 16px calc(var(--safe-bottom) + 92px); max-width: 640px; marg
 .summary p { font-size: 13.5px; margin-bottom: 12px; color: var(--text); }
 .summary p small { color: var(--text-dim); font-size: 11.5px; }
 .summary p b { color: var(--gold-soft); }
+
+/* 占い結果 */
+.fortune-lead { font-size: 13.5px; color: var(--text-dim); margin-bottom: 16px !important; }
+.fortune-block {
+  margin-bottom: 14px; padding: 12px 14px;
+  background: var(--panel2); border-radius: 10px; border-left: 3px solid var(--gold);
+}
+.fortune-block p { font-size: 14px; line-height: 1.85; margin: 0 !important; }
+.fb-label {
+  font-size: 13px; font-weight: 700; color: var(--gold-soft); margin-bottom: 6px;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+}
+.fb-card { font-size: 11px; font-weight: 400; color: var(--text-dim); }
+.fortune-mood {
+  font-size: 13.5px; line-height: 1.85;
+  background: #f2effa; border-radius: 10px; padding: 12px 14px; margin: 16px 0 !important;
+}
+.fortune-advice {
+  margin-top: 16px; padding: 14px 16px;
+  background: var(--gold-pale); border: 1px solid #ddc890; border-radius: 12px;
+  font-size: 14px; line-height: 1.9;
+}
+.fortune-advice b { color: var(--gold-soft); }
+.fortune-cards { margin-top: 18px; }
+.fortune-cards summary {
+  font-size: 12.5px; color: var(--accent); cursor: pointer; padding: 6px 0;
+}
+.fortune-cards .dim-note { font-size: 11.5px; color: var(--text-dim); margin-top: 6px; }
 .summary .sum-list { list-style: none; margin: 8px 0 14px; }
 .summary .sum-list li {
   font-size: 12.5px; color: var(--text-dim); padding: 6px 0;
